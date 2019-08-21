@@ -96,7 +96,7 @@ public class SeckillServiceImpl implements SeckillService {
      */
     public SeckillExecution executeSeckill(long seckillId, long userPhone, String md5) throws SecurityException, RepeatKillException, SeckillCloseException {
 
-        if(md5 == null || md5.equals(getMD5(seckillId))){
+        if(md5 == null || !md5.equals(getMD5(seckillId))){
             throw new SecurityException("md5 data rewrite");
         }
 
