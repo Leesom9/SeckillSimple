@@ -21,7 +21,7 @@
                     <!--显示time图标-->
                     <span class="glyphicon glyphicon-time"></span>
                     <!--展示倒计时-->
-                    <span class="glyphicon" id="seckill-box"></span>
+                    <span class="countdown" id="seckill-box"></span>
                 </h2>
             </div>
         </div>
@@ -65,8 +65,8 @@
 <!-- JQuery cookie操作插件-->
 <script src="http://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 <!-- JQuery countDown倒计时插件-->
-<script src="http://cdn.bootcss.com/jquery.countdown/2.1.0/jquery.countdown.min.js"></script>
-
+<!--<script src="http://cdn.bootcss.com/jquery.countdown/2.1.0/jquery.countdown.min.js"></script>-->
+<script src="https://cdn.bootcss.com/jquery.countdown/2.2.0/jquery.countdown.min.js"></script>
 <!--开始编写交互逻辑-->
 <script src="/resources/script/seckill.js" type="text/javascript"></script>
 

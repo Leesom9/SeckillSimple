@@ -18,7 +18,7 @@
 
     <select id="queryById" resultType="Seckill" parameterType="long">
         select
-            seckill_id,name,start_time,end_time,create_time
+            seckill_id,name,number,start_time,end_time,create_time
         from
             seckill
         where
@@ -28,7 +28,7 @@
     <!--多个参数可以省略  parameterType="int"-->
     <select id="queryAll" resultType="Seckill" >
         select
-            seckill_id,name,start_time,end_time,create_time
+            seckill_id,name,number,start_time,end_time,create_time
         from
             seckill
         order by create_time desc
