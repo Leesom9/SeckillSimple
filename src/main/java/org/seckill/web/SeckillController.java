@@ -98,7 +98,10 @@ public class SeckillController {
         SeckillResult<SeckillExecution> result;
 
         try {
-            SeckillExecution seckillExecution = seckillService.executeSeckill(seckillId,phone,md5);
+            //不考虑高并发时候调用
+            //SeckillExecution seckillExecution = seckillService.executeSeckill(seckillId,phone,md5);
+            //考虑高并发，使用存储过程调用
+            SeckillExecution seckillExecution = seckillService.executeSeckillProcedure(seckillId,phone,md5);
             return new SeckillResult<SeckillExecution>(true,seckillExecution);
         }
         catch (RepeatKillException e){

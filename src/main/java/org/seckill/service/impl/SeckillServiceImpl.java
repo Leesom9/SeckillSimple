@@ -1,5 +1,6 @@
 package org.seckill.service.impl;
 
+import org.apache.commons.collections.MapUtils;
 import org.seckill.dao.SeckillDao;
 import org.seckill.dao.SuccessKilledDao;
 import org.seckill.dao.cache.RedisDao;
@@ -20,7 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author ：leesom
@@ -126,19 +129,19 @@ public class SeckillServiceImpl implements SeckillService {
         Date nowTime = new Date();
 
         try {
-            //减库存
-            int updateCount = seckillDao.reduceNumber(seckillId,nowTime);
-            if(updateCount <= 0){
-                //秒杀关闭，没有更新到记录
-                throw new SeckillCloseException("seckill is closed");
+            //记录购买行为
+            int insertCount = successKilledDao.insertSuccessKilled(seckillId,userPhone);
+            if(insertCount <= 0){
+                //重复秒杀
+                throw new RepeatKillException("seckill repeat");
             }else{
-                //记录购买行为
-                int insertCount = successKilledDao.insertSuccessKilled(seckillId,userPhone);
-                if(insertCount <= 0){
-                    //重复秒杀
-                    throw new RepeatKillException("seckill repeat");
+                //减库存,热点商品的竞争
+                int updateCount = seckillDao.reduceNumber(seckillId,nowTime);
+                if(updateCount <= 0){
+                    //秒杀关闭，没有更新到记录  rollback
+                    throw new SeckillCloseException("seckill is closed");
                 }else{
-                    //秒杀成功
+                    //秒杀成功 commit
                     SuccessKilled successKilled = successKilledDao.queryByIdWithSeckill(seckillId,userPhone);
                     return new SeckillExecution(seckillId, SeckillStatEnum.SUCCESS,successKilled);
                 }
@@ -157,6 +160,48 @@ public class SeckillServiceImpl implements SeckillService {
             //将所有编译期异常转化为运行期异常
             //rollback回滚，避免减库存和插入购买记录的操作没有同时的进行
             throw new SeckillException("");
+        }
+    }
+
+    /***
+     * 通过java客户端，调用存储过程，完成秒杀。
+     * 拿到返回的 int result 判断执行结果
+     * @param seckillId
+     * @param userPhone
+     * @param md5
+     * @return
+     * @throws SecurityException
+     * @throws RepeatKillException
+     * @throws SeckillCloseException
+     */
+    public SeckillExecution executeSeckillProcedure(long seckillId, long userPhone, String md5){
+
+        if(null == md5 || !md5.equals(getMD5(seckillId))){
+            return new SeckillExecution(seckillId,SeckillStatEnum.DATA_REWRITE);
+        }
+
+        Date killTime = new Date();
+        Map<String,Object> map = new HashMap<String, Object>();
+        map.put("seckillId",seckillId);
+        map.put("phone",userPhone);
+        map.put("killTime",killTime);
+        map.put("result",null);
+
+        try {
+            //使用map，当存储过程执行完之后，result被赋值
+            seckillDao.killByProcedure(map);
+            //获取result
+            int result = MapUtils.getInteger(map,"result",-2);
+
+            if(1 == result){
+                SuccessKilled sk = successKilledDao.queryByIdWithSeckill(seckillId,userPhone);
+                return new SeckillExecution(seckillId,SeckillStatEnum.SUCCESS,sk);
+            }else{
+                return new SeckillExecution(seckillId,SeckillStatEnum.stateOf(result));
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage(),e);
+            return new SeckillExecution(seckillId,SeckillStatEnum.INNER_ERROR);
         }
     }
 }
