@@ -32,7 +32,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
-      <version>1.1.1</version>
+      <version>1.2.0</version>
     </dependency>
     <!--实现slf4j接口并整合，作用：编程的时候只使用slf4j就可以了，logback-classic可以帮助整合其他日志-->
     <dependency>
